@@ -487,6 +487,31 @@ func (s *Float32Map) Range(f func(key float32, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Float32Map) AscendGreaterEqual(key float32, f func(key float32, value interface{}) bool) {
+	var preds, succs [maxLevel]*float32Node
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *Float32Map) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -960,6 +985,31 @@ func (s *Float32MapDesc) Delete(key float32) bool {
 // from any point during the Range call.
 func (s *Float32MapDesc) Range(f func(key float32, value interface{}) bool) {
 	x := s.header.atomicLoadNext(0)
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Float32MapDesc) AscendGreaterEqual(key float32, f func(key float32, value interface{}) bool) {
+	var preds, succs [maxLevel]*float32NodeDesc
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
 	for x != nil {
 		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
 			x = x.atomicLoadNext(0)
@@ -1457,6 +1507,31 @@ func (s *Float64Map) Range(f func(key float64, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Float64Map) AscendGreaterEqual(key float64, f func(key float64, value interface{}) bool) {
+	var preds, succs [maxLevel]*float64Node
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *Float64Map) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -1930,6 +2005,31 @@ func (s *Float64MapDesc) Delete(key float64) bool {
 // from any point during the Range call.
 func (s *Float64MapDesc) Range(f func(key float64, value interface{}) bool) {
 	x := s.header.atomicLoadNext(0)
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Float64MapDesc) AscendGreaterEqual(key float64, f func(key float64, value interface{}) bool) {
+	var preds, succs [maxLevel]*float64NodeDesc
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
 	for x != nil {
 		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
 			x = x.atomicLoadNext(0)
@@ -2427,6 +2527,31 @@ func (s *Int32Map) Range(f func(key int32, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Int32Map) AscendGreaterEqual(key int32, f func(key int32, value interface{}) bool) {
+	var preds, succs [maxLevel]*int32Node
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *Int32Map) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -2900,6 +3025,31 @@ func (s *Int32MapDesc) Delete(key int32) bool {
 // from any point during the Range call.
 func (s *Int32MapDesc) Range(f func(key int32, value interface{}) bool) {
 	x := s.header.atomicLoadNext(0)
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Int32MapDesc) AscendGreaterEqual(key int32, f func(key int32, value interface{}) bool) {
+	var preds, succs [maxLevel]*int32NodeDesc
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
 	for x != nil {
 		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
 			x = x.atomicLoadNext(0)
@@ -3397,6 +3547,31 @@ func (s *Int16Map) Range(f func(key int16, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Int16Map) AscendGreaterEqual(key int16, f func(key int16, value interface{}) bool) {
+	var preds, succs [maxLevel]*int16Node
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *Int16Map) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -3870,6 +4045,31 @@ func (s *Int16MapDesc) Delete(key int16) bool {
 // from any point during the Range call.
 func (s *Int16MapDesc) Range(f func(key int16, value interface{}) bool) {
 	x := s.header.atomicLoadNext(0)
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Int16MapDesc) AscendGreaterEqual(key int16, f func(key int16, value interface{}) bool) {
+	var preds, succs [maxLevel]*int16NodeDesc
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
 	for x != nil {
 		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
 			x = x.atomicLoadNext(0)
@@ -4367,6 +4567,31 @@ func (s *IntMap) Range(f func(key int, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *IntMap) AscendGreaterEqual(key int, f func(key int, value interface{}) bool) {
+	var preds, succs [maxLevel]*intNode
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *IntMap) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -4840,6 +5065,31 @@ func (s *IntMapDesc) Delete(key int) bool {
 // from any point during the Range call.
 func (s *IntMapDesc) Range(f func(key int, value interface{}) bool) {
 	x := s.header.atomicLoadNext(0)
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *IntMapDesc) AscendGreaterEqual(key int, f func(key int, value interface{}) bool) {
+	var preds, succs [maxLevel]*intNodeDesc
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
 	for x != nil {
 		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
 			x = x.atomicLoadNext(0)
@@ -5337,6 +5587,31 @@ func (s *Uint64Map) Range(f func(key uint64, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Uint64Map) AscendGreaterEqual(key uint64, f func(key uint64, value interface{}) bool) {
+	var preds, succs [maxLevel]*uint64Node
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *Uint64Map) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -5810,6 +6085,31 @@ func (s *Uint64MapDesc) Delete(key uint64) bool {
 // from any point during the Range call.
 func (s *Uint64MapDesc) Range(f func(key uint64, value interface{}) bool) {
 	x := s.header.atomicLoadNext(0)
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Uint64MapDesc) AscendGreaterEqual(key uint64, f func(key uint64, value interface{}) bool) {
+	var preds, succs [maxLevel]*uint64NodeDesc
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
 	for x != nil {
 		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
 			x = x.atomicLoadNext(0)
@@ -6307,6 +6607,31 @@ func (s *Uint32Map) Range(f func(key uint32, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Uint32Map) AscendGreaterEqual(key uint32, f func(key uint32, value interface{}) bool) {
+	var preds, succs [maxLevel]*uint32Node
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *Uint32Map) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -6780,6 +7105,31 @@ func (s *Uint32MapDesc) Delete(key uint32) bool {
 // from any point during the Range call.
 func (s *Uint32MapDesc) Range(f func(key uint32, value interface{}) bool) {
 	x := s.header.atomicLoadNext(0)
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Uint32MapDesc) AscendGreaterEqual(key uint32, f func(key uint32, value interface{}) bool) {
+	var preds, succs [maxLevel]*uint32NodeDesc
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
 	for x != nil {
 		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
 			x = x.atomicLoadNext(0)
@@ -7277,6 +7627,31 @@ func (s *Uint16Map) Range(f func(key uint16, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Uint16Map) AscendGreaterEqual(key uint16, f func(key uint16, value interface{}) bool) {
+	var preds, succs [maxLevel]*uint16Node
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *Uint16Map) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -7750,6 +8125,31 @@ func (s *Uint16MapDesc) Delete(key uint16) bool {
 // from any point during the Range call.
 func (s *Uint16MapDesc) Range(f func(key uint16, value interface{}) bool) {
 	x := s.header.atomicLoadNext(0)
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *Uint16MapDesc) AscendGreaterEqual(key uint16, f func(key uint16, value interface{}) bool) {
+	var preds, succs [maxLevel]*uint16NodeDesc
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
 	for x != nil {
 		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
 			x = x.atomicLoadNext(0)
@@ -8247,6 +8647,31 @@ func (s *UintMap) Range(f func(key uint, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *UintMap) AscendGreaterEqual(key uint, f func(key uint, value interface{}) bool) {
+	var preds, succs [maxLevel]*uintNode
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *UintMap) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -8732,6 +9157,31 @@ func (s *UintMapDesc) Range(f func(key uint, value interface{}) bool) {
 	}
 }
 
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *UintMapDesc) AscendGreaterEqual(key uint, f func(key uint, value interface{}) bool) {
+	var preds, succs [maxLevel]*uintNodeDesc
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
 // Len return the length of this skipmap.
 func (s *UintMapDesc) Len() int {
 	return int(atomic.LoadInt64(&s.length))
@@ -9202,6 +9652,31 @@ func (s *StringMap) Delete(key string) bool {
 // from any point during the Range call.
 func (s *StringMap) Range(f func(key string, value interface{}) bool) {
 	x := s.header.atomicLoadNext(0)
+	for x != nil {
+		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
+			x = x.atomicLoadNext(0)
+			continue
+		}
+		if !f(x.key, x.loadVal()) {
+			break
+		}
+		x = x.atomicLoadNext(0)
+	}
+}
+
+// AscendGreaterEqual calls f sequentially for each key and value present in the skipmap greater or equal than min.
+// If f returns false, range stops the iteration.
+//
+// AscendGreaterEqual does not necessarily correspond to any consistent snapshot of the Map's
+// contents: no key will be visited more than once, but if the value for any key
+// is stored or deleted concurrently, AscendGreaterEqual may reflect any mapping for that key
+// from any point during the AscendGreaterEqual call.
+func (s *StringMap) AscendGreaterEqual(key string, f func(key string, value interface{}) bool) {
+	var preds, succs [maxLevel]*stringNode
+	x := s.findNode(key, &preds, &succs)
+	if x == nil && succs[0].key > key {
+		x = succs[0]
+	}
 	for x != nil {
 		if !x.flags.MGet(fullyLinked|marked, fullyLinked) {
 			x = x.atomicLoadNext(0)
